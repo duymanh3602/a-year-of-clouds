@@ -1,46 +1,40 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
-import handleProxy from './proxy';
-import handleRedirect from './redirect';
 import apiRouter from './router';
+import { createClient } from "@supabase/supabase-js";
+import { CONFIG } from './config/config.local';
 
-// Export a default object containing event handlers
 export default {
-	// The fetch handler is invoked when this worker receives a HTTP(S) request
-	// and should return a Response (optionally wrapped in a Promise)
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		// You'll find it helpful to parse the request.url string into a URL object. Learn more at https://developer.mozilla.org/en-US/docs/Web/API/URL
-		const url = new URL(request.url);
+  async fetch(request: any) {
+    const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_API_KEY);
 
-		// You can get pretty far with simple logic like if/switch-statements
-		switch (url.pathname) {
-			case '/redirect':
-				return handleRedirect.fetch(request, env, ctx);
-
-			case '/proxy':
-				return handleProxy.fetch(request, env, ctx);
+    const url = new URL(request.url);
+    switch (url.pathname) {
+      case '/': 
+        return new Response('Hello World!!!')
+      case '/health-check':
+        return new Response('OK', { status: 200 });
+			case '/source':
+				return Response.redirect('https://github.com/duymanh3602/a-year-of-clouds')
 		}
 
 		if (url.pathname.startsWith('/api/')) {
-			// You can also use more robust routing
+      // middleware to check if the request has a valid JWT token
+      const token = request.headers.get('Authorization');
+      if (!token) {
+        return new Response('Unauthorized', { status: 401 });
+      } else {
+        if (token.split(' ')[0] !== 'Bearer') {
+          return new Response('Wrong JWT format', { status: 401 });
+        }
+        const { data, error } = await supabase.auth.getUser(token.split(' ')[1] ?? '');
+        if (error) {
+          return new Response(error.toString(), { status: 401 });
+        } else {
+          request.user = data.user;
+        }
+      }
 			return apiRouter.handle(request);
 		}
-
-		return new Response(
-			`Try making requests to:
-      <ul>
-      <li><code><a href="/redirect?redirectUrl=https://example.com/">/redirect?redirectUrl=https://example.com/</a></code>,</li>
-      <li><code><a href="/proxy?modify&proxyUrl=https://example.com/">/proxy?modify&proxyUrl=https://example.com/</a></code>, or</li>
-      <li><code><a href="/api/todos">/api/todos</a></code></li>`,
-			{ headers: { 'Content-Type': 'text/html' } }
-		);
-	},
+    
+    return Response.redirect('https://github.com/duymanh3602/a-year-of-clouds')
+  },
 };
