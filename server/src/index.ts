@@ -18,6 +18,10 @@ export default {
 
 		if (url.pathname.startsWith('/api/')) {
       // middleware to check if the request has a valid JWT token
+      const accept_path = ['/api/v1/login', '/api/register'];
+      if (accept_path.includes(url.pathname)) {
+        return apiRouter.handle(request);
+      }
       const token = request.headers.get('Authorization');
       if (!token) {
         return new Response('Unauthorized', { status: 401 });
