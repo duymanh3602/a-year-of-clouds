@@ -19,7 +19,7 @@ export interface Response {
 }
 
 const defaults = {
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8787',
   headers: () => ({
     'Content-Type': 'application/json',
     Authorization: getStoredAuthToken() ? `Bearer ${getStoredAuthToken()}` : undefined

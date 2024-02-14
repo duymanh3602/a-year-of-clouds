@@ -2,7 +2,11 @@ import { Router } from 'itty-router';
 import { CONFIG } from './config/config.local';
 import { User, createClient } from '@supabase/supabase-js';
 
+const corsHeaders = { 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': 'http://localhost:3000' }
+
 const router = Router();
+
+router.options('*', () => new Response('OK', { status: 200, headers: corsHeaders }));
 
 const admin = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_API_KEY);
 
@@ -13,9 +17,9 @@ router.post(`${CONFIG.API_PREFIX}/login`, async (request) => {
 	const password = body.password;
 	const { data, error } = await admin.auth.signInWithPassword({ email, password });
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data.session.access_token), { status: 200 });
+	return new Response(JSON.stringify(data.session.access_token), { status: 200, headers: corsHeaders });
 });
 
 // is_accepted = null: chưa xác nhận, true: đã chấp nhận, false: từ chối
@@ -29,16 +33,16 @@ router.get(`${CONFIG.API_PREFIX}/create-new-chat/:id`, async (request) => {
 		.select('*')
 		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`);
 	if (isExist.data && isExist.data.length > 0) {
-		return new Response('EXISTED', { status: 200 });
+		return new Response('EXISTED', { status: 200, headers: corsHeaders });
 	}
 	const { data, error } = await admin
 		.from('chat_accept')
 		.insert([new_chat_request])
   		.select()
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/update-accept-chat/:id`, async (request) => {	
@@ -49,9 +53,9 @@ router.get(`${CONFIG.API_PREFIX}/update-accept-chat/:id`, async (request) => {
 		.eq('receive_id', request.user.id)
 		
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-chat-confirm/:id`, async (request) => {
@@ -60,9 +64,9 @@ router.get(`${CONFIG.API_PREFIX}/get-chat-confirm/:id`, async (request) => {
 		.select('is_accepted')
 		.eq('id', request.params.id)
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 });
 
 router.post(`${CONFIG.API_PREFIX}/send-message`, async (request) => {
@@ -76,22 +80,22 @@ router.post(`${CONFIG.API_PREFIX}/send-message`, async (request) => {
 		.select('*')
 		.eq('id', content.connect_id);
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
 	if (data.length === 0 || (data[0].from_id !== request.user.id && data[0].receive_id !== request.user.id)) {
-		return new Response('Forbidden', { status: 403 });
+		return new Response('Forbidden', { status: 403, headers: corsHeaders });
 	}
 	if (data[0].is_accepted === false) {
-		return new Response('Forbidden by blocked', { status: 403 });
+		return new Response('Forbidden by blocked', { status: 403, headers: corsHeaders });
 	}
 	const { data: message, error: messageError } = await admin
 		.from('message_content')
 		.insert([new_message])
 		.select();
 	if (messageError) {
-		return new Response(JSON.stringify(messageError), { status: 500 });
+		return new Response(JSON.stringify(messageError), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(message), { status: 200 });
+	return new Response(JSON.stringify(message), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/seen-message/:id`, async (request) => {
@@ -100,9 +104,9 @@ router.get(`${CONFIG.API_PREFIX}/seen-message/:id`, async (request) => {
 		.update({ is_seen: true })
 		.eq('id', request.params.id)
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
@@ -111,9 +115,9 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
 		.select('*')
 		.eq('connect_id', request.params.id);
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
@@ -122,19 +126,19 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
 		.select('*')
 		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`)
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200 });	
+	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });	
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-find-user`, async (request) => {
 	const regex = request.query.find?.toString() ?? '';
 	if (regex.length < 3) {
-		return new Response('Finding word must have at least 3 characters', { status: 400 });
+		return new Response('Finding word must have at least 3 characters', { status: 400, headers: corsHeaders });
 	}
 	const { data, error } = await admin.auth.admin.listUsers();
 	if (error) {
-		return new Response(JSON.stringify(error), { status: 500 });
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
 	const filter = data.users?.filter((user: User) =>
 		user.email?.includes(regex),
@@ -146,7 +150,7 @@ router.get(`${CONFIG.API_PREFIX}/get-find-user`, async (request) => {
 			avatar_url: user.user_metadata.avatar_url ?? null,
 		};
 	});
-	return new Response(JSON.stringify(res), { status: 200 });
+	return new Response(JSON.stringify(res), { status: 200, headers: corsHeaders });
 });
 
 // router.post(`${CONFIG.API_PREFIX}/update-accept`, async (request) => {
