@@ -121,14 +121,34 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
+	const responses: any = [];
 	const { data, error } = await admin
 		.from('chat_accept')
 		.select('*')
 		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`)
+	const { data: users, error: userError } = await admin.auth.admin.listUsers();
+	if (data && data.length !== 0) {
+		await Promise.all(data.map(async (item) => {
+			let user;
+			if (item.from_id === request.user.id) {
+				user = users.users?.find((user: User) => user.id === item.receive_id);
+			} else {
+				user = users.users?.find((user: User) => user.id === item.from_id);
+			}
+			const response = {
+				id: item.id,
+				name: user?.user_metadata.full_name ?? user?.email,
+				avatar_url: user?.user_metadata.avatar_url ?? 'https://seeklogo.com/images/V/vite-logo-BFD4283991-seeklogo.com.png',
+				last_chat: 'Hello world!',
+			}
+			responses.push(response);
+		}))
+	}
+	
 	if (error) {
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });	
+	return new Response(JSON.stringify(responses), { status: 200, headers: corsHeaders });	
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-find-user`, async (request) => {
@@ -146,8 +166,9 @@ router.get(`${CONFIG.API_PREFIX}/get-find-user`, async (request) => {
 	const res = filter.map((user) => {
 		return {
 			id: user.id,
-			name: user.user_metadata.full_name ?? user.email,
-			avatar_url: user.user_metadata.avatar_url ?? null,
+			name: user?.user_metadata.full_name ?? user?.email,
+			avatar_url: user?.user_metadata.avatar_url ?? 'https://seeklogo.com/images/V/vite-logo-BFD4283991-seeklogo.com.png',
+			last_chat: 'Hello world!',
 		};
 	});
 	return new Response(JSON.stringify(res), { status: 200, headers: corsHeaders });
