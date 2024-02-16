@@ -16,14 +16,14 @@ export const findUser = async (word: string) => {
   return response
 }
 
-export const getConversation = async (id: UUID) => {
+export const getConversation = async (id: unknown) => {
   const response = api.get(`/api/v1/get-conversation/${id}`)
   return response
 }
 
-export const sendMessage = async (id: UUID, content: string) => {
-  const body = { id: id, content: content }
-  const response = api.post(`/api/v1/seen-message`, body)
+export const sendMessage = async (id: unknown, content: string) => {
+  const body = { connect_id: id, content: content }
+  const response = api.post(`/api/v1/send-message`, body)
   return response
 }
 

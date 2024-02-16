@@ -2,7 +2,7 @@ import { Router } from 'itty-router';
 import { CONFIG } from './config/config.local';
 import { User, createClient } from '@supabase/supabase-js';
 
-const corsHeaders = { 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': 'http://localhost:3000' }
+const corsHeaders = { 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin':  CONFIG.ORIGIN }
 
 const router = Router();
 
@@ -71,15 +71,13 @@ router.get(`${CONFIG.API_PREFIX}/get-chat-confirm/:id`, async (request) => {
 
 router.post(`${CONFIG.API_PREFIX}/send-message`, async (request) => {
 	const content = await request.json();
-	const new_message = {
-		connect_id: content.connect_id,
-		content: content.content,
-	}
 	const { data, error} = await admin
 		.from('chat_accept')
 		.select('*')
 		.eq('id', content.connect_id);
 	if (error) {
+		console.log(error);
+		
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
 	if (data.length === 0 || (data[0].from_id !== request.user.id && data[0].receive_id !== request.user.id)) {
@@ -88,12 +86,22 @@ router.post(`${CONFIG.API_PREFIX}/send-message`, async (request) => {
 	if (data[0].is_accepted === false) {
 		return new Response('Forbidden by blocked', { status: 403, headers: corsHeaders });
 	}
+	const new_message = {
+		send_by_from: data[0].from_id === request.user.id,
+		connect_id: content.connect_id,
+		content: content.content,
+	}
 	const { data: message, error: messageError } = await admin
 		.from('message_content')
 		.insert([new_message])
 		.select();
-	if (messageError) {
-		return new Response(JSON.stringify(messageError), { status: 500, headers: corsHeaders });
+
+	const { data: update, error: updateError } = await admin.from('chat_accept').update({ last_active: new Date() }).eq('id', content.connect_id);
+	
+	if (messageError || updateError) {
+		console.log(messageError || updateError);
+		
+		return new Response(JSON.stringify(messageError ?? updateError), { status: 500, headers: corsHeaders });
 	}
 	return new Response(JSON.stringify(message), { status: 200, headers: corsHeaders });
 });
@@ -112,9 +120,13 @@ router.get(`${CONFIG.API_PREFIX}/seen-message/:id`, async (request) => {
 router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
 	const { data, error } = await admin
 		.from('message_content')
-		.select('*')
-		.eq('connect_id', request.params.id);
+		.select(`id, content, is_seen, sent_date, send_by_from, chat_accept (from_id, receive_id)`)
+		.eq('connect_id', request.params.id)
+		.order('sent_date', { ascending: true })
+		.limit(20);
 	if (error) {
+		console.log(error);
+		
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
 	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });

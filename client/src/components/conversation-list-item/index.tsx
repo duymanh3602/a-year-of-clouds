@@ -8,10 +8,20 @@ const ConversationListItem = (props) => {
     shave('.conversation-snippet', 20)
   })
 
+  const { setViewing } = props
   const { photo, name, text, id } = props.data
 
   return (
-    <div className='conversation-list-item' onClick={() => console.log(id)}>
+    <div
+      className='conversation-list-item'
+      onClick={() => {
+        const ele = {
+          id: id,
+          name: name
+        }
+        setViewing(ele)
+      }}
+    >
       <img className='conversation-photo' src={photo} alt='conversation' />
       <div className='conversation-info'>
         <h1 className='conversation-title'>{name}</h1>

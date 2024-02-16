@@ -4,87 +4,93 @@ import Toolbar from '../toolbar'
 import ToolbarButton from '../toolbar-button'
 import Message from '../message'
 import moment from 'moment'
+import { getCurrentUserId } from '~/utils/localStorage'
 
 import './MessageList.css'
 
-const MY_USER_ID = 'apple'
+import { getConversation } from '~/app/api/api'
+// import { anon, supabase } from '~/utils/supabase'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
-const MessageList = (props) => {
+const MessageList = (props: { view: unknown }) => {
+  const { view } = props
+  const MY_USER_ID = view ? getCurrentUserId() : 'apple'
+  // const [messages, setMessages] = useState([])
+  // const [channels, setChannels] = useState<RealtimeChannel>()
+
   const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+
+  // useEffect(() => {
+  //   const chatSubscription = supabase
+  //     .from('chat')
+  //     .on('INSERT', (payload) => {
+  //       setMessages((prevMessages) => [...prevMessages, payload.new]);
+  //     })
+  //     .subscribe();
+
+  //   return () => chatSubscription.unsubscribe();
+  // }, []);
+
+  // const sendMessage = async () => {
+  //   try {
+  //     const { data, error } = await supabase.from('chat').insert({
+  //       sender: 'YOUR_USER_ID', // Replace with your user ID
+  //       content: newMessage,
+  //     });
+
+  //     if (error) {
+  //       console.error('Error sending message:', error);
+  //     } else {
+  //       setNewMessage('');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //   }
+  // };
+
+  useEffect(() => {
+    console.log('changed!!!', messages)
+  }, [messages])
+  // :id=eq.${view?.id}
+  // useEffect(() => {
+  //   const channel = anon
+  //     .channel(`chat_accept`)
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: '*',
+  //         schema: 'public',
+  //         table: 'message_content',
+  //         // filter: `id=eq.${view?.id}`
+  //       },
+  //       (payload) => {
+  //         setMessages((prevMessages) => [...prevMessages, payload.new])
+  //       }
+  //     )
+  //     .subscribe()
+  //   return () => {
+  //     channel.unsubscribe()
+  //   }
+  // }, [])
 
   useEffect(() => {
     getMessages()
-  }, [])
+  }, [view])
 
   const getMessages = () => {
-    const tempMessages = [
-      {
-        id: 1,
-        author: 'apple',
-        message:
-          'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 2,
-        author: 'orange',
-        message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 3,
-        author: 'orange',
-        message:
-          'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 4,
-        author: 'apple',
-        message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 5,
-        author: 'apple',
-        message:
-          'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 6,
-        author: 'apple',
-        message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 7,
-        author: 'orange',
-        message:
-          'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 8,
-        author: 'orange',
-        message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 9,
-        author: 'apple',
-        message:
-          'Hello world! This is a long message that will hopefully get wrapped by our message bubble component! We will see how well it works.',
-        timestamp: new Date().getTime()
-      },
-      {
-        id: 10,
-        author: 'orange',
-        message: 'It looks like it wraps exactly as it is supposed to. Lets see what a reply looks like!',
-        timestamp: new Date().getTime()
-      }
-    ]
-    setMessages([...messages, ...tempMessages])
+    view &&
+      getConversation(view?.id).then((response) => {
+        const data = response?.map((result) => {
+          return {
+            id: result.id,
+            author: result.send_by_from ? result.chat_accept.from_id : result.chat_accept.receive_id,
+            message: result.content,
+            timestamp: result.sent_date
+          }
+        })
+        setMessages(data)
+      })
   }
 
   const renderMessages = () => {
@@ -149,7 +155,7 @@ const MessageList = (props) => {
   return (
     <div className='message-list'>
       <Toolbar
-        title='Conversation Title'
+        title={view?.name}
         rightItems={[
           <ToolbarButton key='info' icon='ion-ios-information-circle-outline' />,
           <ToolbarButton key='video' icon='ion-ios-videocam' />,
@@ -160,6 +166,7 @@ const MessageList = (props) => {
       <div className='message-list-container'>{renderMessages()}</div>
 
       <Compose
+        viewing={view}
         rightItems={[
           <ToolbarButton key='photo' icon='ion-ios-camera' />,
           <ToolbarButton key='image' icon='ion-ios-image' />,

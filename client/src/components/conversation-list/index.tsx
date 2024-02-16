@@ -12,6 +12,7 @@ import './ConversationList.css'
 // LOGIC: If searchWord is empty, show all conversations, if searchWord is less than 3 characters, show warning, if searchWord is more than 3 characters, show search result
 // when showing search result, add logic to check whether the user is already in the conversation list or not
 const ConversationList = (props) => {
+  const { setViewing } = props
   const [searchWord, setSearchWord] = useState('')
   const [conversations, setConversations] = useState([])
   const [showWarning, setShowWarning] = useState(false)
@@ -58,6 +59,7 @@ const ConversationList = (props) => {
       })
       .then(() => {
         setLoading(false)
+        setViewing(conversations[0]?.id)
       })
   }
 
@@ -80,7 +82,9 @@ const ConversationList = (props) => {
       {showWarning && !loading && (
         <div className='d-flex justify-content-center'>Please enter at least 3 characters</div>
       )}
-      {conversations?.map((conversation) => <ConversationListItem key={conversation?.name} data={conversation} />)}
+      {conversations?.map((conversation) => (
+        <ConversationListItem key={conversation?.name} data={conversation} setViewing={setViewing} />
+      ))}
       {conversations?.length === 0 && !loading && (
         <div className='d-flex justify-content-center'>No conversation found</div>
       )}
