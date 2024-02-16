@@ -9,73 +9,48 @@ import { getCurrentUserId } from '~/utils/localStorage'
 import './MessageList.css'
 
 import { getConversation } from '~/app/api/api'
-// import { anon, supabase } from '~/utils/supabase'
+import { supabase } from '~/utils/supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
+import LastChatScroll from '../scroll-view/LastChatScroll'
 
 const MessageList = (props: { view: unknown }) => {
   const { view } = props
   const MY_USER_ID = view ? getCurrentUserId() : 'apple'
-  // const [messages, setMessages] = useState([])
-  // const [channels, setChannels] = useState<RealtimeChannel>()
+  const [channels, setChannels] = useState<RealtimeChannel>()
 
   const [messages, setMessages] = useState([])
-  const [newMessage, setNewMessage] = useState('')
-
-  // useEffect(() => {
-  //   const chatSubscription = supabase
-  //     .from('chat')
-  //     .on('INSERT', (payload) => {
-  //       setMessages((prevMessages) => [...prevMessages, payload.new]);
-  //     })
-  //     .subscribe();
-
-  //   return () => chatSubscription.unsubscribe();
-  // }, []);
-
-  // const sendMessage = async () => {
-  //   try {
-  //     const { data, error } = await supabase.from('chat').insert({
-  //       sender: 'YOUR_USER_ID', // Replace with your user ID
-  //       content: newMessage,
-  //     });
-
-  //     if (error) {
-  //       console.error('Error sending message:', error);
-  //     } else {
-  //       setNewMessage('');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error:', error);
-  //   }
-  // };
-
-  useEffect(() => {
-    console.log('changed!!!', messages)
-  }, [messages])
-  // :id=eq.${view?.id}
-  // useEffect(() => {
-  //   const channel = anon
-  //     .channel(`chat_accept`)
-  //     .on(
-  //       'postgres_changes',
-  //       {
-  //         event: '*',
-  //         schema: 'public',
-  //         table: 'message_content',
-  //         // filter: `id=eq.${view?.id}`
-  //       },
-  //       (payload) => {
-  //         setMessages((prevMessages) => [...prevMessages, payload.new])
-  //       }
-  //     )
-  //     .subscribe()
-  //   return () => {
-  //     channel.unsubscribe()
-  //   }
-  // }, [])
-
   useEffect(() => {
     getMessages()
+    if (!view) return
+    const channel = supabase
+      .channel('custom-all-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_accept',
+          filter: `id=eq.${view?.id}`
+        },
+        (payload) => {
+          // const newMessage = {
+          //   id: payload.new.id,
+          //   author: payload.new.send_by_from ? payload.new.chat_accept.from_id : payload.new.chat_accept.receive_id,
+          //   message: payload.new.content,
+          //   timestamp: payload.new.sent_date
+          // }
+          // setMessages([...messages, newMessage])
+          getMessages()
+        }
+      )
+      .subscribe()
+    setChannels(channel)
+
+    return () => {
+      if (channels) {
+        supabase.removeChannel(channels)
+      }
+    }
   }, [view])
 
   const getMessages = () => {
@@ -148,6 +123,7 @@ const MessageList = (props: { view: unknown }) => {
       // Proceed to the next message.
       i += 1
     }
+    tempMessages.push(<LastChatScroll />)
 
     return tempMessages
   }

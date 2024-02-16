@@ -122,8 +122,9 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
 		.from('message_content')
 		.select(`id, content, is_seen, sent_date, send_by_from, chat_accept (from_id, receive_id)`)
 		.eq('connect_id', request.params.id)
-		.order('sent_date', { ascending: true })
-		.limit(20);
+		// .order('sent_date', { ascending: false })
+		// .limit(20)
+		.order('sent_date', { ascending: true });
 	if (error) {
 		console.log(error);
 		
