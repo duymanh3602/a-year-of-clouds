@@ -11,7 +11,7 @@ const ConversationListItem = (props) => {
   })
 
   const { setViewing } = props
-  const { photo, name, text, id, is_find, is_accepted, receive_id } = props.data
+  const { photo, name, text, id, is_find, is_accepted, receive_id, from_id } = props.data
 
   return (
     <div
@@ -26,7 +26,8 @@ const ConversationListItem = (props) => {
                   id: res?.id,
                   name: name,
                   is_accepted: res?.is_accepted,
-                  receive_id: res?.receive_id
+                  receive_id: res?.receive_id,
+                  from_id: res?.from_id
                 }
                 setViewing(ele)
                 return
@@ -36,7 +37,8 @@ const ConversationListItem = (props) => {
                 id: response?.id,
                 name: name,
                 is_accepted: response?.is_accepted,
-                receive_id: response?.receive_id
+                receive_id: response?.receive_id,
+                from_id: res?.from_id
               }
               setViewing(ele)
               return
@@ -47,7 +49,8 @@ const ConversationListItem = (props) => {
           id: id,
           name: name,
           is_accepted: is_accepted,
-          receive_id: receive_id
+          receive_id: receive_id,
+          from_id: from_id
         }
         setViewing(ele)
       }}

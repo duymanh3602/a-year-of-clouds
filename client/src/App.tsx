@@ -10,7 +10,6 @@ import UpdatePassword from './auth/UpdatePassword'
 const App = () => {
   return (
     <>
-      {/* <Container className='d-flex align-items-center justify-content-center' style={{ minHeight: '100vh' }}> */}
       <div className='w-100'>
         <Routes>
           <Route element={<AuthRoute />}>
@@ -23,7 +22,6 @@ const App = () => {
           <Route path='/update-password' element={<UpdatePassword />} />
         </Routes>
       </div>
-      {/* </Container> */}
     </>
   )
 }

@@ -21,6 +21,11 @@ export const getConversation = async (id: unknown) => {
   return response
 }
 
+export const getConversationWithOffset = async (id: unknown, offset: number) => {
+  const response = api.get(`/api/v1/get-conversation/${id}?offset=${offset}`)
+  return response
+}
+
 export const sendMessage = async (id: unknown, content: string) => {
   const body = { connect_id: id, content: content }
   const response = api.post(`/api/v1/send-message`, body)

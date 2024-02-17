@@ -65,7 +65,6 @@ const optimisticUpdate = async (url, { updatedFields, currentFields, setLocalDat
     await api(Method.PUT, url, updatedFields)
   } catch (error) {
     setLocalData(currentFields)
-    console.log(error)
   }
 }
 

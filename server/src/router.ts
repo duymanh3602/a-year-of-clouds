@@ -136,19 +136,19 @@ router.get(`${CONFIG.API_PREFIX}/seen-message/:id`, async (request) => {
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-conversation/:id`, async (request) => {
+	const offset = parseInt(request.query.offset?.toString() ?? '0', 10);
 	const { data, error } = await admin
 		.from('message_content')
 		.select(`id, content, is_seen, sent_date, send_by_from, chat_accept (from_id, receive_id)`)
 		.eq('connect_id', request.params.id)
-		// .order('sent_date', { ascending: false })
-		// .limit(20)
-		.order('sent_date', { ascending: true });
+		.order('sent_date', { ascending: false })
+		.range(offset, offset + 19);
 	if (error) {
 		console.log(error);
 		
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
+	return new Response(JSON.stringify(data.reverse()), { status: 200, headers: corsHeaders });
 });
 
 router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
@@ -173,6 +173,7 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
 				last_chat: 'Hello world!',
 				is_accepted: item.is_accepted,
 				receive_id: item.receive_id,
+				from_id: item.from_id,
 			}
 			responses.push(response);
 		}))

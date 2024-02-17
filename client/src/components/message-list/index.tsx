@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Compose from '../compose'
 import Toolbar from '../toolbar'
 import ToolbarButton from '../toolbar-button'
@@ -8,41 +8,48 @@ import { getCurrentUserId } from '~/utils/localStorage'
 
 import './MessageList.css'
 
-import { getConversation, updateChatConfirm } from '~/app/api/api'
+import { getConversation, getConversationWithOffset, updateChatConfirm } from '~/app/api/api'
 import { supabase } from '~/utils/supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import LastChatScroll from '../scroll-view/LastChatScroll'
 import { Button } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 
-const MessageList = (props: { view: unknown }) => {
-  const { view } = props
+const MessageList = (props) => {
+  const { view, reachedTop, setReachedTop, isBottom } = props
   const MY_USER_ID = view ? getCurrentUserId() : 'apple'
   const [channels, setChannels] = useState<RealtimeChannel>()
-
   const [messages, setMessages] = useState([])
+  const [isEnd, setIsEnd] = useState(false)
+  const [messageList, setMessageList] = useState([])
+  const [isFirst, setIsFirst] = useState(true) // tự động scroll xuống dưới cùng khi lần đầu vào chat
+  const [oldFirstId, setOldFirstId] = useState('') // id của tin nhắn đầu tiên trong list tin nhắn cũ
+  const firstMessageRef = useRef<HTMLDivElement | null>()
+  const [tempVar, setTempVar] = useState(false)
+
   useEffect(() => {
     getMessages()
     if (!view) return
+    setIsFirst(true)
+    setIsEnd(false)
     const channel = supabase
       .channel('custom-all-channel')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'chat_accept',
-          filter: `id=eq.${view?.id}`
+          table: 'message_content',
+          filter: `connect_id=eq.${view?.id}`
         },
         (payload) => {
-          // const newMessage = {
-          //   id: payload.new.id,
-          //   author: payload.new.send_by_from ? payload.new.chat_accept.from_id : payload.new.chat_accept.receive_id,
-          //   message: payload.new.content,
-          //   timestamp: payload.new.sent_date
-          // }
-          // setMessages([...messages, newMessage])
-          getMessages()
+          const newMessage = {
+            id: payload.new.id,
+            author: payload.new.send_by_from ? view?.from_id : view?.receive_id,
+            message: payload.new.content,
+            timestamp: payload.new.sent_date
+          }
+          setMessages((prevMessages) => [...prevMessages, newMessage])
         }
       )
       .subscribe()
@@ -54,6 +61,43 @@ const MessageList = (props: { view: unknown }) => {
       }
     }
   }, [view])
+
+  useEffect(() => {
+    if (reachedTop && !isEnd) {
+      setTempVar(true)
+      setReachedTop(false)
+      getConversationWithOffset(view?.id, messages.length).then((response) => {
+        if (response?.length === 0) {
+          setIsEnd(true)
+          return
+        }
+        const data = response?.map((result) => {
+          return {
+            id: result.id,
+            author: result.send_by_from ? result.chat_accept.from_id : result.chat_accept.receive_id,
+            message: result.content,
+            timestamp: result.sent_date
+          }
+        })
+        setOldFirstId(messages[0]?.id)
+        setMessages((prevMessages) => [...data, ...prevMessages])
+      })
+    }
+  }, [reachedTop])
+
+  useEffect(() => {
+    if (!isBottom && tempVar) {
+      firstMessageRef.current?.scrollIntoView({
+        behavior: 'instant',
+        block: 'start'
+      })
+      setTempVar(false)
+    }
+  }, [messageList])
+
+  useEffect(() => {
+    renderMessages()
+  }, [messages])
 
   const getMessages = () => {
     view &&
@@ -110,6 +154,8 @@ const MessageList = (props: { view: unknown }) => {
           endsSequence = false
         }
       }
+
+      current?.id === oldFirstId && tempMessages.push(<div ref={firstMessageRef} />)
 
       tempMessages.push(
         <Message
@@ -172,9 +218,9 @@ const MessageList = (props: { view: unknown }) => {
         tempMessages.push(<div className='d-flex justify-content-center'>You have rejected the chat.</div>)
       }
     }
-    tempMessages.push(<LastChatScroll />)
+    tempMessages.push(<LastChatScroll isFirst={isFirst} isBottom={isBottom} setIsFirst={setIsFirst} />)
 
-    return tempMessages
+    setMessageList(tempMessages)
   }
 
   return (
@@ -188,7 +234,7 @@ const MessageList = (props: { view: unknown }) => {
         ]}
       />
 
-      <div className='message-list-container'>{renderMessages()}</div>
+      <div className='message-list-container'>{messageList}</div>
 
       <Compose
         viewing={view}

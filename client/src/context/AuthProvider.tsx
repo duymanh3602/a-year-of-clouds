@@ -11,7 +11,7 @@ const signOut = () => supabase.auth.signOut()
 
 const passwordReset = (email: string) =>
   supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'http://localhost:3000/update-password'
+    redirectTo: 'https://a-year-of-clouds.pages.dev/update-password'
   })
 
 const updatePassword = (updatedPassword: string) => supabase.auth.updateUser({ password: updatedPassword })

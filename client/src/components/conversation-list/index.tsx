@@ -47,7 +47,8 @@ const ConversationList = (props) => {
             is_find: true,
             text: result.last_chat,
             is_accepted: result.is_accepted,
-            receive_id: result.receive_id
+            receive_id: result.receive_id,
+            from_id: result.from_id
           }
         })
         setConversations(newConversations)
@@ -72,7 +73,8 @@ const ConversationList = (props) => {
             is_find: false,
             text: result.last_chat,
             is_accepted: result.is_accepted,
-            receive_id: result.receive_id
+            receive_id: result.receive_id,
+            from_id: result.from_id
           }
         })
         setConversations(newConversations)
