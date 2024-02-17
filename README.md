@@ -3,9 +3,11 @@
 
 Authentication built on top of Supabase Auth
 
-Deployed on Cloudflare Workers and Cloudflare Pages
+Deployed on Cloudflare Workers (Serverless) and Cloudflare Pages
 
-Product: updating!
+Tech Used: ReactJs, Vite, Wrangler, Supabase (Realtime, Auth, ...), Cloudflare Pages, Clouflare Workers, ...
+
+Product: [Demo App](https://a-year-of-clouds.pages.dev)
 
 ------------------
 
@@ -41,3 +43,5 @@ Chạy API này mỗi lần test, token sẽ được lưu tự động
 Các API khác chỉ cần set type của Authorization với kiểu Bearer Token
 
 -------------------
+
+New year, New fortunes !!!
