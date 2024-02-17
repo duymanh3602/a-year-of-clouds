@@ -31,7 +31,8 @@ router.get(`${CONFIG.API_PREFIX}/create-new-chat/:id`, async (request) => {
 	}
 	const isExist = await admin.from('chat_accept')
 		.select('*')
-		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`);
+		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`)
+		.or(`receive_id.eq.${request.params.id}, from_id.eq.${request.params.id}`);
 	if (isExist.data && isExist.data.length > 0) {
 		return new Response('EXISTED', { status: 200, headers: corsHeaders });
 	}
@@ -42,8 +43,25 @@ router.get(`${CONFIG.API_PREFIX}/create-new-chat/:id`, async (request) => {
 	if (error) {
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
-	return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders });
+	return new Response(JSON.stringify(data[0]), { status: 200, headers: corsHeaders });
 });
+
+router.get(`${CONFIG.API_PREFIX}/get-is-connected/:id`, async (request) => {
+	// id = user_id
+	const { data, error } = await admin
+		.from('chat_accept')
+		.select('*')
+		.or(`receive_id.eq.${request.user.id}, from_id.eq.${request.user.id}`)
+		.or(`receive_id.eq.${request.params.id}, from_id.eq.${request.params.id}`)
+	if (error) {
+		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
+	}
+	if (data.length === 0) {
+		return new Response('NOT_CONNECTED', { status: 200, headers: corsHeaders });
+	} else {
+		return new Response(JSON.stringify(data[0]), { status: 200, headers: corsHeaders });
+	}
+})
 
 router.get(`${CONFIG.API_PREFIX}/update-accept-chat/:id`, async (request) => {	
 	const { data, error } = await admin
@@ -153,6 +171,8 @@ router.get(`${CONFIG.API_PREFIX}/get-conversation-list`, async (request) => {
 				name: user?.user_metadata.full_name ?? user?.email,
 				avatar_url: user?.user_metadata.avatar_url ?? 'https://seeklogo.com/images/V/vite-logo-BFD4283991-seeklogo.com.png',
 				last_chat: 'Hello world!',
+				is_accepted: item.is_accepted,
+				receive_id: item.receive_id,
 			}
 			responses.push(response);
 		}))

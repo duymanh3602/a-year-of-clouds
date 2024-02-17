@@ -8,9 +8,6 @@ import { getConversationList, findUser } from '~/app/api/api'
 
 import './ConversationList.css'
 
-// TODO: Recheck logic for search, it's not working as expected, list is showing user_id not conversation_id
-// LOGIC: If searchWord is empty, show all conversations, if searchWord is less than 3 characters, show warning, if searchWord is more than 3 characters, show search result
-// when showing search result, add logic to check whether the user is already in the conversation list or not
 const ConversationList = (props) => {
   const { setViewing } = props
   const [searchWord, setSearchWord] = useState('')
@@ -25,12 +22,15 @@ const ConversationList = (props) => {
     if (searchWord.length > 2) {
       setShowWarning(false)
       getSearchedUser(searchWord).then((response) => {
-        const newConversations = response.map((result) => {
+        const newConversations = response?.map((result) => {
           return {
             id: result.id,
             photo: result.avatar_url,
             name: result.name,
-            text: result.last_chat
+            is_find: true,
+            text: result.last_chat,
+            is_accepted: result.is_accepted,
+            receive_id: result.receive_id
           }
         })
         setConversations(newConversations)
@@ -47,12 +47,15 @@ const ConversationList = (props) => {
     setLoading(true)
     getConversationList()
       .then((response) => {
-        const newConversations = response.map((result) => {
+        const newConversations = response?.map((result) => {
           return {
             id: result.id,
             photo: result.avatar_url,
             name: result.name,
-            text: result.last_chat
+            is_find: false,
+            text: result.last_chat,
+            is_accepted: result.is_accepted,
+            receive_id: result.receive_id
           }
         })
         setConversations(newConversations)

@@ -8,10 +8,12 @@ import { getCurrentUserId } from '~/utils/localStorage'
 
 import './MessageList.css'
 
-import { getConversation } from '~/app/api/api'
+import { getConversation, updateChatConfirm } from '~/app/api/api'
 import { supabase } from '~/utils/supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import LastChatScroll from '../scroll-view/LastChatScroll'
+import { Button } from 'react-bootstrap'
+import { toast } from 'react-toastify'
 
 const MessageList = (props: { view: unknown }) => {
   const { view } = props
@@ -122,6 +124,53 @@ const MessageList = (props: { view: unknown }) => {
 
       // Proceed to the next message.
       i += 1
+    }
+    if (view?.is_accepted === null) {
+      if (view?.receive_id !== MY_USER_ID) {
+        tempMessages.push(
+          <div className='d-flex justify-content-center'>Please wait for the other user to accept the chat.</div>
+        )
+      } else {
+        tempMessages.push(
+          <>
+            <div className='d-flex justify-content-center'>Please confirm the chat.</div>
+            <div className='d-flex justify-content-center gap-2'>
+              <Button
+                onClick={() => {
+                  updateChatConfirm(view?.id, true)
+                    .then((response) => {
+                      toast.success('You have accepted the chat.')
+                    })
+                    .catch((error) => {
+                      toast.error(error)
+                    })
+                }}
+              >
+                Accept
+              </Button>
+              <Button
+                onClick={() => {
+                  updateChatConfirm(view?.id, false)
+                    .then(() => {
+                      toast.success('You have rejected the chat.')
+                    })
+                    .catch((error) => {
+                      toast.error(error)
+                    })
+                }}
+              >
+                Block
+              </Button>
+            </div>
+          </>
+        )
+      }
+    } else if (view?.is_accepted === false) {
+      if (view?.receive_id !== MY_USER_ID) {
+        tempMessages.push(<div className='d-flex justify-content-center'>The other user has rejected the chat.</div>)
+      } else {
+        tempMessages.push(<div className='d-flex justify-content-center'>You have rejected the chat.</div>)
+      }
     }
     tempMessages.push(<LastChatScroll />)
 

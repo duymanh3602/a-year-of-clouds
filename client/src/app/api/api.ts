@@ -38,11 +38,16 @@ export const seenMessage = async (id: UUID) => {
 }
 
 export const updateChatConfirm = async (id: UUID, isAccepted: boolean) => {
-  const response = api.get(`/api/v1/update-accept-chat/${id}?status=${isAccepted}`, body)
+  const response = api.get(`/api/v1/update-accept-chat/${id}?status=${isAccepted}`)
   return response
 }
 
 export const createNewChat = async (id: UUID) => {
   const response = api.get(`/api/v1/create-new-chat/${id}`)
+  return response
+}
+
+export const getIsConnected = async (id: UUID) => {
+  const response = api.get(`/api/v1/get-is-connected/${id}`)
   return response
 }
