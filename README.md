@@ -1,6 +1,8 @@
 # a-year-of-clouds
 "Khai Code" xuân mới ^^
 
+### Supabase Realtime Chat Application
+
 Authentication built on top of Supabase Auth
 
 Deployed on Cloudflare Workers (Serverless) and Cloudflare Pages
