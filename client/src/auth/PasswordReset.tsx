@@ -24,8 +24,8 @@ const PasswordReset = () => {
   }
 
   return (
-    <>
-      <Card>
+    <div className='d-flex justify-content-center align-items-center' style={{ height: '100vh' }}>
+      <Card style={{ width: '500px' }}>
         <Card.Body>
           <h2 className='text-center mb-4'>Reset Password</h2>
           <Form onSubmit={handleSubmit}>
@@ -44,7 +44,7 @@ const PasswordReset = () => {
           Back to Login? <Link to={'/login'}>Login</Link>
         </div>
       </Card>
-    </>
+    </div>
   )
 }
 

@@ -34,8 +34,8 @@ const UpdatePassword = () => {
   }
 
   return (
-    <>
-      <Card>
+    <div className='d-flex justify-content-center align-items-center' style={{ height: '100vh' }}>
+      <Card style={{ width: '500px' }}>
         <Card.Body>
           <h2 className='text-center mb-4'>Update Password</h2>
           <Form onSubmit={handleSubmit}>
@@ -55,7 +55,7 @@ const UpdatePassword = () => {
           </Form>
         </Card.Body>
       </Card>
-    </>
+    </div>
   )
 }
 

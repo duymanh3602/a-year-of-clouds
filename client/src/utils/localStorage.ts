@@ -12,3 +12,15 @@ export const getCurrentUserId = () => {
   const user = JSON.parse(data)
   return user.user.id ?? null
 }
+
+export const getCurrentUsername = () => {
+  const data = localStorage.getItem(auth_token) ?? ''
+  const user = JSON.parse(data)
+  return user.user.user_metadata.full_name ?? user.user.email
+}
+
+export const getCurrentUserMetadata = () => {
+  const data = localStorage.getItem(auth_token) ?? ''
+  const user = JSON.parse(data)
+  return user.user.user_metadata
+}

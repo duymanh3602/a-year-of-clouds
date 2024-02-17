@@ -194,7 +194,9 @@ router.get(`${CONFIG.API_PREFIX}/get-find-user`, async (request) => {
 		return new Response(JSON.stringify(error), { status: 500, headers: corsHeaders });
 	}
 	const filter = data.users?.filter((user: User) =>
-		user.email?.includes(regex),
+		(user.email?.includes(regex.toLowerCase()) 
+			|| user.user_metadata.full_name?.toString().toLowerCase().includes(regex.toLowerCase())) 
+		&& user.id !== request.user.id,
 	);
 	const res = filter.map((user) => {
 		return {

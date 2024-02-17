@@ -35,8 +35,8 @@ const Register = () => {
   }
 
   return (
-    <>
-      <Card>
+    <div className='d-flex justify-content-center align-items-center flex-column' style={{ height: '100vh' }}>
+      <Card style={{ width: '500px' }}>
         <Card.Body>
           <h2 className='text-center mb-4'>Register</h2>
           <Form onSubmit={handleSubmit}>
@@ -63,7 +63,7 @@ const Register = () => {
       <div className='w-100 text-center mt-2'>
         Already a User? <Link to={'/login'}>Login</Link>
       </div>
-    </>
+    </div>
   )
 }
 

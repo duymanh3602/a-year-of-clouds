@@ -7,13 +7,30 @@ import ToolbarButton from '../toolbar-button'
 import { getConversationList, findUser } from '~/app/api/api'
 
 import './ConversationList.css'
+import { Button, Form, Modal } from 'react-bootstrap'
+import { supabase } from '~/utils/supabase'
+import { toast } from 'react-toastify'
+import { getCurrentUserMetadata, getCurrentUsername } from '~/utils/localStorage'
+import { useAuth } from '~/context/AuthProvider'
+
+const updateUsername = async (name: string, avatar_url: string) => {
+  const { error } = await supabase.auth.updateUser({ data: { full_name: name, avatar_url: avatar_url } })
+  if (error) {
+    toast.error('Error updating user')
+  }
+  toast.success('User updated')
+}
 
 const ConversationList = (props) => {
+  const { signOut } = useAuth()
   const { setViewing } = props
   const [searchWord, setSearchWord] = useState('')
   const [conversations, setConversations] = useState([])
   const [showWarning, setShowWarning] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
+  const [username, setUsername] = useState(getCurrentUserMetadata()?.full_name ?? '')
+  const [avatarUrl, setAvatarUrl] = useState(getCurrentUserMetadata()?.avatar_url ?? '')
   useEffect(() => {
     getConversations()
   }, [])
@@ -74,11 +91,20 @@ const ConversationList = (props) => {
     return response
   }
 
+  const handleCloseModal = () => {
+    setShowSettings(false)
+  }
+
+  const handleUpdateUsername = () => {
+    updateUsername(username, avatarUrl)
+    setShowSettings(false)
+  }
+
   return (
     <div className='conversation-list'>
       <Toolbar
         title='Messenger'
-        leftItems={[<ToolbarButton key='cog' icon='ion-ios-cog' />]}
+        leftItems={[<ToolbarButton key='cog' icon='ion-ios-cog' click={showSettings} setClick={setShowSettings} />]}
         rightItems={[<ToolbarButton key='add' icon='ion-ios-add-circle-outline' />]}
       />
       <ConversationSearch setSearchWord={setSearchWord} />
@@ -91,6 +117,48 @@ const ConversationList = (props) => {
       {conversations?.length === 0 && !loading && (
         <div className='d-flex justify-content-center'>No conversation found</div>
       )}
+
+      <div className='modal' id='modal'>
+        <Modal centered show={showSettings} onHide={handleCloseModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Settings</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className='mb-3' controlId='exampleForm.ControlInput1'>
+                <Form.Label>Your name</Form.Label>
+                <Form.Control
+                  type='text'
+                  defaultValue={getCurrentUsername()}
+                  autoFocus
+                  onChange={(e) => {
+                    setUsername(e.target.value)
+                  }}
+                />
+                <Form.Label>Avatar Url</Form.Label>
+                <Form.Control
+                  type='text'
+                  defaultValue={getCurrentUserMetadata()?.avatar_url}
+                  onChange={(e) => {
+                    setAvatarUrl(e.target.value)
+                  }}
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant='secondary' onClick={handleCloseModal}>
+              Close
+            </Button>
+            <Button variant='secondary' onClick={signOut}>
+              Logout
+            </Button>
+            <Button variant='primary' onClick={handleUpdateUsername}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
     </div>
   )
 }

@@ -34,10 +34,10 @@ const Login = () => {
   }
 
   return (
-    <>
-      <Card>
+    <div className='d-flex justify-content-center align-items-center' style={{ height: '100vh' }}>
+      <Card style={{ width: '500px' }}>
         <Card.Body>
-          <h2 className='text-center mb-4'>Login</h2>
+          <h2 className='text-center mb-4 w-45'>Login</h2>
           <Form onSubmit={handleSubmit}>
             <Form.Group id='email'>
               <Form.Label>Email</Form.Label>
@@ -61,7 +61,7 @@ const Login = () => {
           Forgot Password? <Link to={'/password-reset'}>Click Here</Link>
         </div>
       </Card>
-    </>
+    </div>
   )
 }
 

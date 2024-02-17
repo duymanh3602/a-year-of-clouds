@@ -1,8 +1,15 @@
 import './ToolbarButton.css'
 
 const ToolbarButton = (props) => {
-  const { icon } = props
-  return <i className={`toolbar-button ${icon}`} />
+  const { icon, click, setClick } = props
+  return (
+    <i
+      onClick={() => {
+        setClick && setClick(!click)
+      }}
+      className={`toolbar-button ${icon}`}
+    />
+  )
 }
 
 export default ToolbarButton
